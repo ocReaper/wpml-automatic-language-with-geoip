@@ -39,7 +39,7 @@ class Wpml_automatic_language_with_geoip {
 
 	protected $redirected_cookie_name = 'language-redirected';
 
-	protected $preferred_default_language = 'en-uk';
+	protected $preferred_default_language = '';
 
 	/**
 	 * Wpml_automatic_language_with_geoip constructor.
@@ -88,7 +88,13 @@ class Wpml_automatic_language_with_geoip {
 		$is_not_exists     = ! array_key_exists( $filtered_language, wpml_get_active_languages_filter( null ) );
 
 		if ( $is_not_filtered && $is_not_exists ) {
-			$sitepress->switch_lang( $this->preferred_default_language, true );
+			if ( ! empty( $this->preferred_default_language ) ) {
+				$default_language = $this->preferred_default_language;
+			} else {
+				$default_language = $sitepress->get_default_language();
+			}
+
+			$sitepress->switch_lang( $default_language, true );
 		} else {
 			$sitepress->switch_lang( $filtered_language, true );
 		}
