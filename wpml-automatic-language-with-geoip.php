@@ -11,6 +11,9 @@
  * License:     MIT
  */
 
+require 'vendor/autoload.php';
+use GeoIp2\Database\Reader;
+
 /**
  * Class Custom_WPML_Frontend_Request
  *
@@ -103,6 +106,11 @@ class Wpml_automatic_language_with_geoip {
 		if ( $this->is_wp_engine_server() ) {
 			return getenv( 'HTTP_GEOIP_COUNTRY_CODE' );
 		}
+
+		$reader = new Reader( 'assets/GeoLite2-Country.mmdb' );
+		$record = $reader->country( $_SERVER['REMOTE_ADDR'] );
+
+		return $record->country->isoCode;
 	}
 
 	/**
