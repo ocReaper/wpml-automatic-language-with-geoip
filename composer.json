@@ -1,5 +1,22 @@
 {
+    "name": "ocreaper/wpml-automatic-language-with-geoip",
+    "type": "wordpress-plugin",
+    "description": "WPML Automatic language with GeoIP",
+    "version": "0.0.2",
+    "homepage": "https://akosresch.wordpress.com/2016/06/02/new-wordpress-plugin-wpml-language-change-with-geoip/",
+    "authors": [
+        {
+            "name": "Akos Resch",
+            "email": "ocreaper@gmail.com",
+            "homepage": "https://akosresch.wordpress.com/",
+            "role": "Developer"
+        }
+    ],
+    "config": {
+        "preferred-install": "dist"
+    },
     "require": {
+        "php": ">=5.4",
         "geoip2/geoip2": "2.0"
     }
 }

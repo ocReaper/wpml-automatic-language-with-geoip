@@ -51,6 +51,7 @@ class Wpml_automatic_language_with_geoip {
 			return;
 		}
 
+		$this->preferred_default_language = apply_filters( 'wpml_automatic_language_with_geoip_preferred_default_language', $this->preferred_default_language );
 		add_action( 'plugins_loaded', array( &$this, 'replace_wpml_frontend_request_handler' ), - 1 );
 		add_action( 'plugins_loaded', array( &$this, 'wpml_language_redirect_via_geoip' ), 11 );
 	}
@@ -107,6 +108,8 @@ class Wpml_automatic_language_with_geoip {
 	 *
 	 * @since 04/06/2016
 	 * @return string
+	 * @throws \GeoIp2\Exception\AddressNotFoundException
+	 * @throws \MaxMind\Db\Reader\InvalidDatabaseException
 	 */
 	protected function get_geoip_country_code() {
 		if ( $this->is_wp_engine_server() ) {
@@ -122,13 +125,16 @@ class Wpml_automatic_language_with_geoip {
 	/**
 	 * Return the language code of the visitor by mapping the GeoIP country code to the WPML languages
 	 *
-	 * @param $language
+	 * @param string $language
 	 *
 	 * @since 04/06/2016
 	 * @return string
 	 */
 	protected function map_country_code_to_wpml_language( $language ) {
-		return apply_filters( 'wpml_automatic_language_with_geoip_country_code_map', $language );
+		$iso_3166_2_to_gettext_map = require_once 'assets/iso-3166-2-to-gettext.php';
+		$iso_3166_2_to_gettext_map = apply_filters( 'wpml_automatic_language_with_geoip_country_code_map', $iso_3166_2_to_gettext_map );
+
+		return $iso_3166_2_to_gettext_map[$language];
 	}
 
 	/**

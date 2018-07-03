@@ -11,9 +11,16 @@ Automatically changes the load of language in WPML based on the GeoIP service
 
 ## Requirements
 
-- php: >=5.3.1 | tested with 5.5.12
+- PHP >=5.4
 - WordPress 4.5.2
 - WPML Multilingual CMS 3.3.8
+
+## Altering the behaviour
+
+You can create a `mu-plugin` which adds a filter to `wpml_automatic_language_with_geoip_preferred_default_language` hook to change the default language only for the frontend.
+
+Also if the predefined ALPHA2 country code to language code map doesn't meet your requirements:
+You can create a `mu-plugin` which adds a filter to `wpml_automatic_language_with_geoip_country_code_map` hook to change it's values.
 
 ## Licence
 
