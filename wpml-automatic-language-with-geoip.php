@@ -12,15 +12,18 @@
  */
 
 require 'vendor/autoload.php';
+
 use GeoIp2\Database\Reader;
+use GeoIp2\Exception\AddressNotFoundException;
+use WPML\Language\Detection\CookieLanguage;
+use WPML\Language\Detection\Frontend;
 
 /**
  * Class Custom_WPML_Frontend_Request
  *
  * @since 04/06/2016
  */
-class Custom_WPML_Frontend_Request extends WPML_Frontend_Request {
-
+class Custom_WPML_Frontend_Request extends Frontend {
 	public function get_requested_lang() {
 		if ( is_null( $this->get_request_uri_lang() ) ) {
 			return $this->get_cookie_lang();
@@ -62,13 +65,16 @@ class Wpml_automatic_language_with_geoip {
 	 * @since 04/06/2016
 	 */
 	public function replace_wpml_frontend_request_handler() {
-		global $wpml_request_handler, $wpml_url_converter, $pagenow, $wpml_language_resolution, $sitepress;
+		global $wpml_request_handler, $wpml_url_converter, $wpml_language_resolution, $sitepress;
+
+		$cookieLanguage = new CookieLanguage( new WPML_Cookie(), $sitepress->get_default_language() );
+
 		$wpml_request_handler = new Custom_WPML_Frontend_Request(
 			$wpml_url_converter,
 			$wpml_language_resolution->get_active_language_codes(),
 			$sitepress->get_default_language(),
-			new WPML_Cookie(),
-			$pagenow
+			$cookieLanguage,
+			new WPML_WP_API()
 		);
 	}
 
@@ -78,7 +84,7 @@ class Wpml_automatic_language_with_geoip {
 	 * @since 04/06/2016
 	 */
 	public function wpml_language_redirect_via_geoip() {
-		if ( $_COOKIE[ $this->redirected_cookie_name ] ) {
+		if ( ! isset( $_COOKIE[ $this->redirected_cookie_name ] ) || empty( $_COOKIE[ $this->redirected_cookie_name ] ) ) {
 			return;
 		}
 
@@ -106,18 +112,23 @@ class Wpml_automatic_language_with_geoip {
 	/**
 	 * Return the visitor's country code based on various GeoIP services
 	 *
-	 * @since 04/06/2016
 	 * @return string
 	 * @throws \GeoIp2\Exception\AddressNotFoundException
 	 * @throws \MaxMind\Db\Reader\InvalidDatabaseException
+	 * @since 04/06/2016
 	 */
 	protected function get_geoip_country_code() {
 		if ( $this->is_wp_engine_server() ) {
 			return getenv( 'HTTP_GEOIP_COUNTRY_CODE' );
 		}
 
-		$reader = new Reader( 'assets/GeoLite2-Country.mmdb' );
-		$record = $reader->country( $_SERVER['REMOTE_ADDR'] );
+		$reader = new Reader( plugin_dir_path( __FILE__ ) . 'assets/GeoLite2-Country.mmdb' );
+
+		try {
+			$record = $reader->country( $_SERVER['REMOTE_ADDR'] );
+		} catch ( AddressNotFoundException $e ) {
+			return ICL_LANGUAGE_CODE;
+		}
 
 		return $record->country->isoCode;
 	}
@@ -127,21 +138,21 @@ class Wpml_automatic_language_with_geoip {
 	 *
 	 * @param string $language
 	 *
-	 * @since 04/06/2016
 	 * @return string
+	 * @since 04/06/2016
 	 */
 	protected function map_country_code_to_wpml_language( $language ) {
 		$iso_3166_2_to_gettext_map = require_once 'assets/iso-3166-2-to-gettext.php';
 		$iso_3166_2_to_gettext_map = apply_filters( 'wpml_automatic_language_with_geoip_country_code_map', $iso_3166_2_to_gettext_map );
 
-		return $iso_3166_2_to_gettext_map[$language];
+		return $iso_3166_2_to_gettext_map[ $language ];
 	}
 
 	/**
 	 * Determine if the hosting provider is WP Engine
 	 *
-	 * @since 04/06/2016
 	 * @return bool
+	 * @since 04/06/2016
 	 */
 	protected function is_wp_engine_server() {
 		return class_exists( 'WPE_API', false );
