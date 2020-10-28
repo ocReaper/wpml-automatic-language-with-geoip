@@ -122,10 +122,11 @@ class Wpml_automatic_language_with_geoip {
 			return getenv( 'HTTP_GEOIP_COUNTRY_CODE' );
 		}
 
+		$remote_address = isset($_SERVER['REMOTE_ADDR']) ? filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP) : '127.0.0.1';
 		$reader = new Reader( plugin_dir_path( __FILE__ ) . 'assets/GeoLite2-Country.mmdb' );
 
 		try {
-			$record = $reader->country( $_SERVER['REMOTE_ADDR'] );
+			$record = $reader->country( $remote_address );
 		} catch ( AddressNotFoundException $e ) {
 			return ICL_LANGUAGE_CODE;
 		}
